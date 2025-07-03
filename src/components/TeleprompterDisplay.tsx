@@ -214,26 +214,33 @@ const TeleprompterDisplay = memo(function TeleprompterDisplay({
           </div>
         ) : (
           <div
-            style={{
-              ...textStyle,
-              fontSize: isLandscapeMode ? `${Math.max(settings.fontSize * 1.2, 40)}px` : `${settings.fontSize}px`
-            }}
-            className={`whitespace-pre-wrap min-h-full ${
-              !isLandscapeMode ? 'cursor-pointer' : ''
+            ref={textRef}
+            className={`whitespace-pre-wrap leading-relaxed ${
+              settings.mirror ? 'transform scale-y-[-1]' : ''
             }`}
-            onClick={!isLandscapeMode ? handleStartEdit : undefined}
+            style={textStyle}
           >
-            {text || (
-              <div className="text-gray-400 text-center py-8" style={{ transform: 'none' }}>
-                <Edit3 className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p className="text-lg mb-2">
-                  {isLandscapeMode ? 'Nenhum texto carregado' : 'Toque para começar a escrever'}
-                </p>
-                <p className="text-sm">
-                  {isLandscapeMode ? 'Toque na tela para mostrar controles' : 'ou use o botão Scripts para carregar um texto'}
-                </p>
-              </div>
+            {/* Espaço extra antes do texto para facilitar leitura */}
+            <div style={{ height: isLandscapeMode ? '100vh' : '50vh' }} />
+            
+            {enableMarkdown ? (
+              <div dangerouslySetInnerHTML={{ __html: parseMarkdown(text) }} />
+            ) : (
+              text || (
+                <div className="text-gray-400 text-center py-8" style={{ transform: 'none' }}>
+                  <Edit3 className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p className="text-lg mb-2">
+                    {isLandscapeMode ? 'Nenhum texto carregado' : 'Toque para começar a escrever'}
+                  </p>
+                  <p className="text-sm">
+                    {isLandscapeMode ? 'Toque na tela para mostrar controles' : 'ou use o botão Scripts para carregar um texto'}
+                  </p>
+                </div>
+              )
             )}
+            
+            {/* Espaço extra depois do texto */}
+            <div style={{ height: isLandscapeMode ? '100vh' : '50vh' }} />
           </div>
         )}
       </div>

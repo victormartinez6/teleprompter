@@ -49,6 +49,42 @@ function App() {
     selectScript
   } = useScripts();
 
+  // Handlers para controles do teleprompter
+  const handleTogglePlay = useCallback(() => {
+    if (settings.countdownTime > 0 && !isPlaying) {
+      setShowCountdown(true);
+    } else {
+      setIsPlaying(!isPlaying);
+    }
+  }, [isPlaying, settings.countdownTime]);
+
+  const handleReset = useCallback(() => {
+    setIsPlaying(false);
+    setScrollPosition(0);
+    setShowCountdown(false);
+  }, []);
+
+  const handleToggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  }, []);
+
+  const handleCountdownComplete = useCallback(() => {
+    setShowCountdown(false);
+    setIsPlaying(true);
+  }, []);
+
+  const handleCountdownCancel = useCallback(() => {
+    setShowCountdown(false);
+  }, []);
+
+
+
   // Register service worker
   useEffect(() => {
     if ('serviceWorker' in navigator) {
@@ -229,40 +265,7 @@ function App() {
     };
   }, []);
 
-  const handleTogglePlay = useCallback(() => {
-    if (!isPlaying && settings.countdownTime > 0) {
-      setShowCountdown(true);
-    } else {
-      setIsPlaying(!isPlaying);
-    }
-  }, [isPlaying, settings.countdownTime]);
 
-  const handleCountdownComplete = useCallback(() => {
-    setShowCountdown(false);
-    setIsPlaying(true);
-  }, []);
-
-  const handleCountdownCancel = useCallback(() => {
-    setShowCountdown(false);
-  }, []);
-
-  const handleReset = useCallback(() => {
-    setIsPlaying(false);
-    setScrollPosition(0);
-    setShowCountdown(false);
-  }, [setScrollPosition, setIsPlaying]);
-
-  const handleToggleFullscreen = useCallback(async () => {
-    try {
-      if (document.fullscreenElement) {
-        await document.exitFullscreen();
-      } else {
-        await document.documentElement.requestFullscreen();
-      }
-    } catch (error) {
-      console.log('Fullscreen not supported or failed');
-    }
-  }, []);
 
   const handleBluetoothCommand = useCallback((command: string) => {
     switch (command) {
@@ -288,13 +291,16 @@ function App() {
     setSettings({ ...settings, text: newText });
   }, [settings, setSettings]);
 
-  const handleTemplateSelect = useCallback((content: string) => {
-    setSettings({ ...settings, text: content });
-  }, [settings, setSettings]);
+  const handleTemplateSelect = useCallback((template: any) => {
+    setSettings(prev => ({ ...prev, text: template.content }));
+    setShowTemplateManager(false);
+  }, [setSettings]);
 
   const handleScriptSelect = useCallback((script: any) => {
-    selectScript(script);
-  }, [selectScript]);
+    setSettings(prev => ({ ...prev, text: script.content }));
+    selectScript(script.id);
+    setShowScriptManager(false);
+  }, [selectScript, setSettings]);
 
   // Landscape mode - reading focused layout
   if (isLandscape) {
@@ -463,6 +469,8 @@ function App() {
           onToggleFullscreen={handleToggleFullscreen}
           isFullscreen={isFullscreen}
           onOpenScriptManager={() => setShowScriptManager(true)}
+          onOpenTemplateManager={() => setShowTemplateManager(true)}
+          onOpenPracticeMode={() => setShowPracticeMode(true)}
         />
       </div>
 
