@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/logo_tele.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="description" content="Teleprompter profissional com controle Bluetooth e recursos PWA para criadores de conteúdo" />
+    <meta name="keywords" content="teleprompter, prompter, video, gravação, bluetooth, pwa, mobile" />
+    <meta name="author" content="Teleprompter Fácil" />
+    <meta name="theme-color" content="#F1613D" />
+    <meta name="color-scheme" content="light" />
+    <link rel="manifest" href="/manifest.json" />
+    <title>Teleprompter Fácil - Prompter Profissional</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="application-name" content="Teleprompter Fácil" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Teleprompter Fácil" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="msapplication-TileColor" content="#F1613D" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    <meta name="format-detection" content="telephone=no" />
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="/logo_tele.svg" />
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="/src/main.tsx" as="script" />
+    
+    <!-- Performance optimizations -->
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    
+    <!-- Social Media Meta Tags -->
+    <meta property="og:title" content="Teleprompter Fácil - Prompter Profissional" />
+    <meta property="og:description" content="Teleprompter profissional com controle Bluetooth e recursos PWA para criadores de conteúdo" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/logo_tele.svg" />
+    
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Teleprompter Fácil" />
+    <meta name="twitter:description" content="Teleprompter profissional com controle Bluetooth e recursos PWA" />
+  </head>
+  <body class="bg-white text-gray-900">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- PWA Installation Script -->
+    <script>
+      let deferredPrompt;
+      let installButton;
+      
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        
+        // Show install button
+        installButton = document.createElement('button');
+        installButton.innerHTML = `
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2v13m-4-4l4 4 4-4M5 17v2a2 2 0 002 2h10a2 2 0 002-2v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>Instalar App</span>
+        `;
+        installButton.style.cssText = `
+          position: fixed;
+          bottom: 20px;
+          right: 20px;
+          background: #F1613D;
+          color: white;
+          border: none;
+          padding: 12px 16px;
+          border-radius: 12px;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          z-index: 1000;
+          box-shadow: 0 8px 25px rgba(241, 97, 61, 0.3);
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          backdrop-filter: blur(10px);
+          transition: all 0.3s ease;
+          animation: slideIn 0.5s ease-out;
+        `;
+        
+        // Add animation keyframes
+        const style = document.createElement('style');
+        style.textContent = `
+          @keyframes slideIn {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+          }
+        `;
+        document.head.appendChild(style);
+        
+        installButton.onmouseover = () => {
+          installButton.style.transform = 'scale(1.05)';
+          installButton.style.boxShadow = '0 12px 35px rgba(241, 97, 61, 0.4)';
+        };
+        
+        installButton.onmouseout = () => {
+          installButton.style.transform = 'scale(1)';
+          installButton.style.boxShadow = '0 8px 25px rgba(241, 97, 61, 0.3)';
+        };
+        
+        installButton.onclick = async () => {
+          if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            installButton.style.animation = 'slideOut 0.3s ease-in forwards';
+            setTimeout(() => installButton.remove(), 300);
+          }
+        };
+        
+        document.body.appendChild(installButton);
+        
+        // Auto-hide after 15 seconds
+        setTimeout(() => {
+          if (installButton && installButton.parentNode) {
+            installButton.style.animation = 'slideOut 0.3s ease-in forwards';
+            setTimeout(() => installButton.remove(), 300);
+          }
+        }, 15000);
+      });
+      
+      // Handle app installation
+      window.addEventListener('appinstalled', () => {
+        console.log('PWA was installed');
+        if (installButton && installButton.parentNode) {
+          installButton.remove();
+        }
+      });
+      
+      // Add slideOut animation
+      const slideOutStyle = document.createElement('style');
+      slideOutStyle.textContent = `
+        @keyframes slideOut {
+          from { transform: translateY(0); opacity: 1; }
+          to { transform: translateY(100px); opacity: 0; }
+        }
+      `;
+      document.head.appendChild(slideOutStyle);
+    </script>
+  </body>
+</html>

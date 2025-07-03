@@ -1,0 +1,75 @@
+{
+  "name": "Teleprompter Fácil",
+  "short_name": "Teleprompter",
+  "description": "Professional teleprompter with Bluetooth control and PWA capabilities",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#F1613D",
+  "orientation": "any",
+  "categories": ["productivity", "utilities"],
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/logo_tele.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo_tele.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4MCIgaGVpZ2h0PSI3MjAiIHZpZXdCb3g9IjAgMCAxMjgwIDcyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTI4MCIgaGVpZ2h0PSI3MjAiIGZpbGw9IiNmZmZmZmYiLz48dGV4dCB4PSI2NDAiIHk9IjM2MCIgZmlsbD0iIzAwMDAwMCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjQ4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5UZWxlcHJvbXB0ZXIgRsOhY2lsPC90ZXh0Pjwvc3ZnPg==",
+      "sizes": "1280x720",
+      "type": "image/svg+xml",
+      "form_factor": "wide",
+      "label": "Teleprompter main interface"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNzUwIiBoZWlnaHQ9IjEzMzQiIHZpZXdCb3g9IjAgMCA3NTAgMTMzNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNzUwIiBoZWlnaHQ9IjEzMzQiIGZpbGw9IiNmZmZmZmYiLz48dGV4dCB4PSIzNzUiIHk9IjY2NyIgZmlsbD0iIzAwMDAwMCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjM2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5UZWxlcHJvbXB0ZXIgTW9iaWxlPC90ZXh0Pjwvc3ZnPg==",
+      "sizes": "750x1334",
+      "type": "image/svg+xml",
+      "form_factor": "narrow",
+      "label": "Teleprompter mobile interface"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Novo Script",
+      "short_name": "Novo",
+      "description": "Criar um novo script",
+      "url": "/?action=new-script",
+      "icons": [
+        {
+          "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgNXYxNG0tNy03aDE0IiBzdHJva2U9IiNGMTYxM0QiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Scripts",
+      "short_name": "Scripts",
+      "description": "Gerenciar scripts salvos",
+      "url": "/?action=manage-scripts",
+      "icons": [
+        {
+          "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTQgMmE0IDQgMCAwIDEgNCA0djEyYTQgNCAwIDAgMS00IDRINmE0IDQgMCAwIDEtNC00VjZhNCA0IDAgMCAxIDQtNGg4eiIgZmlsbD0iI0YxNjEzRCIvPjxwYXRoIGQ9Ik05IDloNk05IDEzaDZtMCA0aC02IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "edge_side_panel": {
+    "preferred_width": 400
+  }
+}
