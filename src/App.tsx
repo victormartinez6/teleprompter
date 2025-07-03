@@ -297,6 +297,28 @@ function App() {
   }, [selectScript]);
 
   // Landscape mode - reading focused layout
+  if (isLandscape) {
+    return (
+      <div className="h-screen flex flex-col bg-white text-gray-900 overflow-hidden">
+        {/* Landscape Controls - Only show when active */}
+        {showLandscapeControls && (
+          <LandscapeControls
+            isPlaying={isPlaying}
+            settings={settings}
+            onTogglePlay={handleTogglePlay}
+            onReset={handleReset}
+            onUpdateSettings={setSettings}
+            onToggleFullscreen={handleToggleFullscreen}
+            isFullscreen={isFullscreen}
+            onOpenScriptManager={() => setShowScriptManager(true)}
+            onOpenTemplateManager={() => setShowTemplateManager(true)}
+            onOpenPracticeMode={() => setShowPracticeMode(true)}
+            onHide={() => setShowLandscapeControls(false)}
+            onBluetoothCommand={handleBluetoothCommand}
+          />
+        )}
+
+        {/* Full Screen Text Display */}
         <TeleprompterDisplay
           text={settings.text}
           settings={settings}
