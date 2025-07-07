@@ -88,89 +88,96 @@ export function useBluetooth(props?: BluetoothHookProps) {
     }
   }, [props, mapHidToCommand]);
 
-  // Mapear teclas do teclado como fallback
+  // Mapear teclas do teclado (sempre ativo para teste)
   const handleKeyPress = useCallback((event: KeyboardEvent) => {
-    if (!device?.connected || !props?.onCommand) return;
-
-    // Prevenir comportamento padrão para teclas do controle
-    const controlKeys = [
-      'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
-      'Enter', 'Escape', 'PageUp', 'PageDown'
-    ];
-    
-    if (controlKeys.includes(event.code)) {
-      event.preventDefault();
-      event.stopPropagation();
+    // Verificar se temos o callback de comando
+    if (!props?.onCommand) {
+      console.log('❌ ERRO: props.onCommand não disponível');
+      return;
     }
 
-    console.log('Bluetooth Remote Key (fallback):', event.code, event.key);
+    // Lista de teclas que queremos capturar
+    const controlKeys = [
+      'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+      'Enter', 'Escape', 'PageUp', 'PageDown',
+      'Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6'
+    ];
+    
+    // Só processar teclas que nos interessam
+    if (!controlKeys.includes(event.code)) {
+      return;
+    }
+
+    // PREVENIR comportamento padrão IMEDIATAMENTE
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+
+    console.log('🎮 TECLA CAPTURADA:', event.code, event.key);
 
     // Mapear teclas para comandos do teleprompter
+    let command = '';
     switch (event.code) {
       case 'Space':
       case 'Enter':
-        props.onCommand('toggle_play');
+      case 'Digit1':
+        command = 'toggle_play';
         break;
       case 'Escape':
-        props.onCommand('reset');
+      case 'Digit2':
+        command = 'reset';
         break;
       case 'ArrowUp':
       case 'PageUp':
-        props.onCommand('page_up');
+      case 'Digit5':
+        command = 'page_up';
         break;
       case 'ArrowDown':
       case 'PageDown':
-        props.onCommand('page_down');
+      case 'Digit6':
+        command = 'page_down';
         break;
       case 'ArrowRight':
       case 'Equal':
       case 'Plus':
-        props.onCommand('speed_up');
+      case 'Digit4':
+        command = 'speed_up';
         break;
       case 'ArrowLeft':
       case 'Minus':
-        props.onCommand('speed_down');
-        break;
-      // Teclas numéricas do controle
-      case 'Digit1':
-        props.onCommand('toggle_play');
-        break;
-      case 'Digit2':
-        props.onCommand('reset');
-        break;
       case 'Digit3':
-        props.onCommand('speed_down');
-        break;
-      case 'Digit4':
-        props.onCommand('speed_up');
-        break;
-      case 'Digit5':
-        props.onCommand('page_up');
-        break;
-      case 'Digit6':
-        props.onCommand('page_down');
+        command = 'speed_down';
         break;
     }
-  }, [device?.connected, props]);
+
+    if (command) {
+      console.log('🚀 ENVIANDO COMANDO:', command);
+      props.onCommand(command);
+    } else {
+      console.log('⚠️  Tecla não mapeada:', event.code);
+    }
+  }, [props]);
 
   // Listener de teclado sempre ativo para teste
   useEffect(() => {
     if (props?.onCommand) {
-      console.log('🎮 BLUETOOTH DEBUG: Sistema ativo!');
-      console.log('📋 TESTE MANUAL: Use as seguintes teclas do seu teclado:');
-      console.log('   - ESPAÇO: Play/Pause');
-      console.log('   - ESC: Reset');
-      console.log('   - SETA CIMA: Page Up');
-      console.log('   - SETA BAIXO: Page Down');
-      console.log('   - SETA DIREITA: Speed +');
-      console.log('   - SETA ESQUERDA: Speed -');
-      console.log('   - Números 1-6: Comandos alternativos');
+      console.log('🎮 SISTEMA DE CONTROLE ATIVO!');
+      console.log('📋 TESTE COM TECLADO:');
+      console.log('   🎮 ESPAÇO: Play/Pause');
+      console.log('   🔄 ESC: Reset');
+      console.log('   ⬆️  SETA CIMA: Page Up');
+      console.log('   ⬇️  SETA BAIXO: Page Down');
+      console.log('   ➡️  SETA DIREITA: Speed +');
+      console.log('   ⬅️  SETA ESQUERDA: Speed -');
+      console.log('   🔢 Números 1-6: Comandos alternativos');
+      console.log('\n🚨 IMPORTANTE: Se ESPAÇO ainda fizer scroll, há conflito!');
       
-      document.addEventListener('keydown', handleKeyPress, true);
+      // Usar capture=true para capturar antes de outros listeners
+      document.addEventListener('keydown', handleKeyPress, { capture: true, passive: false });
       
       return () => {
-        console.log('🎮 BLUETOOTH DEBUG: Sistema desativado');
-        document.removeEventListener('keydown', handleKeyPress, true);
+        console.log('🚫 SISTEMA DE CONTROLE DESATIVADO');
+        document.removeEventListener('keydown', handleKeyPress, { capture: true } as any);
       };
     }
   }, [handleKeyPress, props?.onCommand]);
