@@ -153,16 +153,49 @@ export function useBluetooth(props?: BluetoothHookProps) {
     }
   }, [device?.connected, props]);
 
-  // Adicionar/remover listeners quando conectado
+  // Debug: capturar TODOS os eventos possíveis
   useEffect(() => {
     if (device?.connected && props?.onCommand) {
-      console.log('Bluetooth Remote: Ativando captura de eventos');
+      console.log('Bluetooth Remote: Ativando captura COMPLETA de eventos');
       
-      // Listener para teclado (fallback)
+      // Função para capturar qualquer evento
+      const captureAllEvents = (event: Event) => {
+        console.log('Bluetooth: Evento capturado:', {
+          type: event.type,
+          target: event.target,
+          detail: (event as any).detail,
+          data: (event as any).data
+        });
+        
+        // Se for um evento de teclado, processar
+        if (event instanceof KeyboardEvent) {
+          handleKeyPress(event);
+        }
+      };
+      
+      // Lista de todos os eventos possíveis para capturar
+      const eventTypes = [
+        'keydown', 'keyup', 'keypress',
+        'input', 'change',
+        'click', 'mousedown', 'mouseup',
+        'touchstart', 'touchend',
+        'focus', 'blur',
+        'devicemotion', 'deviceorientation'
+      ];
+      
+      // Adicionar listeners para todos os eventos
+      eventTypes.forEach(eventType => {
+        document.addEventListener(eventType, captureAllEvents, true);
+      });
+      
+      // Listener específico para teclado
       document.addEventListener('keydown', handleKeyPress, true);
       
       return () => {
         console.log('Bluetooth Remote: Desativando captura de eventos');
+        eventTypes.forEach(eventType => {
+          document.removeEventListener(eventType, captureAllEvents, true);
+        });
         document.removeEventListener('keydown', handleKeyPress, true);
       };
     }
@@ -204,25 +237,63 @@ export function useBluetooth(props?: BluetoothHookProps) {
 
         console.log('Bluetooth: Conectado com sucesso!');
 
-        // Tentar conectar ao serviço HID
+        // Debug completo: listar todos os serviços disponíveis
         try {
-          const hidService = await server.getPrimaryService('00001812-0000-1000-8000-00805f9b34fb');
-          console.log('Bluetooth: Serviço HID encontrado');
+          console.log('Bluetooth: Listando todos os serviços disponíveis...');
+          const services = await server.getPrimaryServices();
+          console.log('Bluetooth: Serviços encontrados:', services.length);
           
-          const characteristics = await hidService.getCharacteristics();
-          console.log('Bluetooth: Características HID:', characteristics.length);
-          
-          // Procurar por características de input report
-          for (const characteristic of characteristics) {
-            if (characteristic.properties.notify) {
-              console.log('Bluetooth: Configurando notificações HID');
-              await characteristic.startNotifications();
-              characteristic.addEventListener('characteristicvaluechanged', handleHidData);
-              setHidDevice(characteristic);
+          for (const service of services) {
+            console.log('Bluetooth: Serviço UUID:', service.uuid);
+            try {
+              const characteristics = await service.getCharacteristics();
+              console.log(`Bluetooth: Serviço ${service.uuid} tem ${characteristics.length} características`);
+              
+              for (const characteristic of characteristics) {
+                console.log('Bluetooth: Característica:', {
+                  uuid: characteristic.uuid,
+                  properties: characteristic.properties
+                });
+                
+                // Tentar configurar notificações em TODAS as características que suportam
+                if (characteristic.properties.notify) {
+                  try {
+                    console.log('Bluetooth: Configurando notificações para:', characteristic.uuid);
+                    await characteristic.startNotifications();
+                    characteristic.addEventListener('characteristicvaluechanged', (event) => {
+                      console.log('Bluetooth: Evento recebido da característica:', characteristic.uuid);
+                      handleHidData(event);
+                    });
+                    setHidDevice(characteristic);
+                  } catch (notifyError) {
+                    console.log('Bluetooth: Erro ao configurar notificações:', notifyError);
+                  }
+                }
+                
+                // Tentar ler características que suportam leitura
+                if (characteristic.properties.read) {
+                  try {
+                    const value = await characteristic.readValue();
+                    console.log('Bluetooth: Valor lido da característica:', characteristic.uuid, new Uint8Array(value.buffer));
+                  } catch (readError) {
+                    console.log('Bluetooth: Erro ao ler característica:', readError);
+                  }
+                }
+              }
+            } catch (charError) {
+              console.log('Bluetooth: Erro ao acessar características do serviço:', service.uuid, charError);
             }
           }
+        } catch (serviceError) {
+          console.log('Bluetooth: Erro ao listar serviços:', serviceError);
+        }
+        
+        // Tentar conectar especificamente ao serviço HID
+        try {
+          const hidService = await server.getPrimaryService('00001812-0000-1000-8000-00805f9b34fb');
+          console.log('Bluetooth: Serviço HID específico encontrado');
         } catch (hidError) {
-          console.log('Bluetooth: Serviço HID não disponível, usando fallback de teclado');
+          console.log('Bluetooth: Serviço HID específico não disponível');
         }
 
         bluetoothDevice.addEventListener('gattserverdisconnected', () => {
