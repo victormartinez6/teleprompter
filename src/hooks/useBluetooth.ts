@@ -1,5 +1,14 @@
 import { useState, useCallback, useEffect } from 'react';
 
+// Declarações de tipo para Web Bluetooth API
+declare global {
+  interface Navigator {
+    bluetooth?: {
+      requestDevice(options: any): Promise<any>;
+    };
+  }
+}
+
 interface BluetoothDevice {
   id: string;
   name: string;
@@ -15,7 +24,71 @@ export function useBluetooth(props?: BluetoothHookProps) {
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Mapear teclas do controle remoto para comandos
+  // Estado para armazenar a conexão HID
+  const [hidDevice, setHidDevice] = useState<any>(null);
+
+  // Mapear códigos HID para comandos do teleprompter
+  const mapHidToCommand = useCallback((hidCode: number) => {
+    console.log('Bluetooth HID Code recebido:', hidCode);
+    
+    // Mapeamento comum de controles remotos HID
+    switch (hidCode) {
+      case 0x28: // Enter
+      case 0x2C: // Space
+        return 'toggle_play';
+      case 0x29: // Escape
+        return 'reset';
+      case 0x52: // Arrow Up
+      case 0x4B: // Page Up
+        return 'page_up';
+      case 0x51: // Arrow Down
+      case 0x4E: // Page Down
+        return 'page_down';
+      case 0x4F: // Arrow Right
+      case 0x57: // Keypad +
+        return 'speed_up';
+      case 0x50: // Arrow Left
+      case 0x56: // Keypad -
+        return 'speed_down';
+      // Números do controle
+      case 0x1E: // 1
+        return 'toggle_play';
+      case 0x1F: // 2
+        return 'reset';
+      case 0x20: // 3
+        return 'speed_down';
+      case 0x21: // 4
+        return 'speed_up';
+      case 0x22: // 5
+        return 'page_up';
+      case 0x23: // 6
+        return 'page_down';
+      default:
+        console.log('Código HID não mapeado:', hidCode);
+        return null;
+    }
+  }, []);
+
+  // Processar dados HID do controle remoto
+  const handleHidData = useCallback((event: any) => {
+    if (!props?.onCommand) return;
+    
+    const data = new Uint8Array(event.target.value.buffer);
+    console.log('Bluetooth HID Data:', Array.from(data));
+    
+    // Processar cada byte de dados
+    for (let i = 0; i < data.length; i++) {
+      if (data[i] !== 0) { // Ignorar bytes vazios
+        const command = mapHidToCommand(data[i]);
+        if (command) {
+          console.log('Bluetooth Command mapeado:', command);
+          props.onCommand(command);
+        }
+      }
+    }
+  }, [props, mapHidToCommand]);
+
+  // Mapear teclas do teclado como fallback
   const handleKeyPress = useCallback((event: KeyboardEvent) => {
     if (!device?.connected || !props?.onCommand) return;
 
@@ -30,7 +103,7 @@ export function useBluetooth(props?: BluetoothHookProps) {
       event.stopPropagation();
     }
 
-    console.log('Bluetooth Remote Key:', event.code, event.key);
+    console.log('Bluetooth Remote Key (fallback):', event.code, event.key);
 
     // Mapear teclas para comandos do teleprompter
     switch (event.code) {
@@ -80,14 +153,16 @@ export function useBluetooth(props?: BluetoothHookProps) {
     }
   }, [device?.connected, props]);
 
-  // Adicionar/remover listener de teclado quando conectado
+  // Adicionar/remover listeners quando conectado
   useEffect(() => {
     if (device?.connected && props?.onCommand) {
-      console.log('Bluetooth Remote: Ativando captura de teclas');
+      console.log('Bluetooth Remote: Ativando captura de eventos');
+      
+      // Listener para teclado (fallback)
       document.addEventListener('keydown', handleKeyPress, true);
       
       return () => {
-        console.log('Bluetooth Remote: Desativando captura de teclas');
+        console.log('Bluetooth Remote: Desativando captura de eventos');
         document.removeEventListener('keydown', handleKeyPress, true);
       };
     }
@@ -105,12 +180,14 @@ export function useBluetooth(props?: BluetoothHookProps) {
     try {
       console.log('Bluetooth: Procurando dispositivos...');
       
-      const bluetoothDevice = await navigator.bluetooth.requestDevice({
+      const bluetoothDevice = await navigator.bluetooth!.requestDevice({
         acceptAllDevices: true,
         optionalServices: [
           'device_information',
           'human_interface_device',
-          '00001812-0000-1000-8000-00805f9b34fb' // HID Service
+          '00001812-0000-1000-8000-00805f9b34fb', // HID Service
+          '0000180f-0000-1000-8000-00805f9b34fb', // Battery Service
+          '00001800-0000-1000-8000-00805f9b34fb'  // Generic Access
         ]
       });
 
@@ -127,9 +204,31 @@ export function useBluetooth(props?: BluetoothHookProps) {
 
         console.log('Bluetooth: Conectado com sucesso!');
 
+        // Tentar conectar ao serviço HID
+        try {
+          const hidService = await server.getPrimaryService('00001812-0000-1000-8000-00805f9b34fb');
+          console.log('Bluetooth: Serviço HID encontrado');
+          
+          const characteristics = await hidService.getCharacteristics();
+          console.log('Bluetooth: Características HID:', characteristics.length);
+          
+          // Procurar por características de input report
+          for (const characteristic of characteristics) {
+            if (characteristic.properties.notify) {
+              console.log('Bluetooth: Configurando notificações HID');
+              await characteristic.startNotifications();
+              characteristic.addEventListener('characteristicvaluechanged', handleHidData);
+              setHidDevice(characteristic);
+            }
+          }
+        } catch (hidError) {
+          console.log('Bluetooth: Serviço HID não disponível, usando fallback de teclado');
+        }
+
         bluetoothDevice.addEventListener('gattserverdisconnected', () => {
           console.log('Bluetooth: Dispositivo desconectado');
           setDevice(prev => prev ? { ...prev, connected: false } : null);
+          setHidDevice(null);
         });
       }
     } catch (err) {
