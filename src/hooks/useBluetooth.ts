@@ -90,9 +90,10 @@ export function useBluetooth(props?: BluetoothHookProps) {
 
   // Mapear teclas do teclado (sempre ativo para teste)
   const handleKeyPress = useCallback((event: KeyboardEvent) => {
-    // Verificar se temos o callback de comando
-    if (!props?.onCommand) {
-      console.log('❌ ERRO: props.onCommand não disponível');
+    // Verificar se temos o callback de comando (global ou local)
+    const commandCallback = (window as any).__teleprompterCommandCallback || props?.onCommand;
+    if (!commandCallback) {
+      console.log('❌ ERRO: Nenhum callback de comando disponível');
       return;
     }
 
@@ -152,16 +153,25 @@ export function useBluetooth(props?: BluetoothHookProps) {
 
     if (command) {
       console.log('🚀 ENVIANDO COMANDO:', command);
-      props.onCommand(command);
+      commandCallback(command);
     } else {
       console.log('⚠️  Tecla não mapeada:', event.code);
     }
   }, [props]);
 
-  // Listener de teclado sempre ativo para teste
+  // Sistema global de controle - só ativar uma vez
   useEffect(() => {
     if (props?.onCommand) {
-      console.log('🎮 SISTEMA DE CONTROLE ATIVO!');
+      // Verificar se já existe um listener ativo
+      const existingListener = (window as any).__teleprompterKeyListener;
+      
+      if (existingListener) {
+        console.log('⚠️  SISTEMA JÁ ATIVO - Atualizando comando callback');
+        (window as any).__teleprompterCommandCallback = props.onCommand;
+        return;
+      }
+      
+      console.log('🎮 SISTEMA DE CONTROLE ATIVO (GLOBAL)!');
       console.log('📋 TESTE COM TECLADO:');
       console.log('   🎮 ESPAÇO: Play/Pause');
       console.log('   🔄 ESC: Reset');
@@ -170,14 +180,33 @@ export function useBluetooth(props?: BluetoothHookProps) {
       console.log('   ➡️  SETA DIREITA: Speed +');
       console.log('   ⬅️  SETA ESQUERDA: Speed -');
       console.log('   🔢 Números 1-6: Comandos alternativos');
-      console.log('\n🚨 IMPORTANTE: Se ESPAÇO ainda fizer scroll, há conflito!');
+      console.log('\n🚨 TESTE: Pressione ESPAÇO agora!');
+      
+      // Armazenar callback globalmente
+      (window as any).__teleprompterCommandCallback = props.onCommand;
+      
+      // Listener global único
+      const globalKeyHandler = (event: KeyboardEvent) => {
+        const callback = (window as any).__teleprompterCommandCallback;
+        if (callback) {
+          handleKeyPress.call(null, event);
+        }
+      };
+      
+      // Marcar como ativo e armazenar referência
+      (window as any).__teleprompterKeyListener = globalKeyHandler;
       
       // Usar capture=true para capturar antes de outros listeners
-      document.addEventListener('keydown', handleKeyPress, { capture: true, passive: false });
+      document.addEventListener('keydown', globalKeyHandler, { capture: true, passive: false });
       
       return () => {
-        console.log('🚫 SISTEMA DE CONTROLE DESATIVADO');
-        document.removeEventListener('keydown', handleKeyPress, { capture: true } as any);
+        // Só limpar se formos a última instância
+        if ((window as any).__teleprompterKeyListener === globalKeyHandler) {
+          console.log('🚫 SISTEMA DE CONTROLE DESATIVADO (GLOBAL)');
+          document.removeEventListener('keydown', globalKeyHandler, { capture: true } as any);
+          delete (window as any).__teleprompterKeyListener;
+          delete (window as any).__teleprompterCommandCallback;
+        }
       };
     }
   }, [handleKeyPress, props?.onCommand]);

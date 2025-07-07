@@ -6,7 +6,17 @@ interface BluetoothControlsProps {
 }
 
 export function BluetoothControls({ onCommand }: BluetoothControlsProps) {
+  console.log('🔵 BluetoothControls: Componente renderizado');
+  console.log('🔵 BluetoothControls: onCommand recebido:', typeof onCommand, !!onCommand);
+  
   const { device, isConnecting, error, connect, disconnect, isSupported } = useBluetooth({ onCommand });
+  
+  console.log('🔵 BluetoothControls: Hook retornou:', { 
+    device: !!device, 
+    isConnecting, 
+    error, 
+    isSupported 
+  });
 
   if (!isSupported) {
     return (
