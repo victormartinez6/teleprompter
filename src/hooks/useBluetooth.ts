@@ -6,6 +6,7 @@ declare global {
     bluetooth?: {
       requestDevice(options: any): Promise<any>;
     };
+    hid?: any;
   }
 }
 
@@ -26,6 +27,7 @@ export function useBluetooth(props?: BluetoothHookProps) {
 
   // Estado para armazenar a conexão HID
   const [hidDevice, setHidDevice] = useState<any>(null);
+  const [webHidDevice, setWebHidDevice] = useState<any>(null);
 
   // Mapear códigos HID para comandos do teleprompter
   const mapHidToCommand = useCallback((hidCode: number) => {
@@ -363,12 +365,149 @@ export function useBluetooth(props?: BluetoothHookProps) {
     setError(null);
   }, []);
 
+  // Função para conectar via WebHID
+  const connectWebHid = useCallback(async () => {
+    if (!navigator.hid) {
+      setError('WebHID não suportado neste navegador');
+      return;
+    }
+
+    try {
+      console.log('🎮 TENTANDO CONECTAR VIA WEBHID...');
+      
+      // Solicitar dispositivos HID
+      const devices = await (navigator as any).hid.requestDevice({
+        filters: [
+          { usagePage: 0x01, usage: 0x06 }, // Teclado
+          { usagePage: 0x0C, usage: 0x01 }, // Consumer Control
+          { usagePage: 0x01, usage: 0x02 }, // Mouse
+        ]
+      });
+
+      if (devices.length === 0) {
+        setError('Nenhum dispositivo HID selecionado');
+        return;
+      }
+
+      const selectedDevice = devices[0];
+      console.log('🎮 DISPOSITIVO HID SELECIONADO:', selectedDevice);
+      
+      // Abrir conexão
+      await selectedDevice.open();
+      setWebHidDevice(selectedDevice);
+      
+      // Escutar eventos de input
+      selectedDevice.addEventListener('inputreport', (event: any) => {
+        console.log('🎮 EVENTO HID RECEBIDO:', event);
+        console.log('🎮 DADOS:', new Uint8Array(event.data.buffer));
+        
+        // Processar dados HID
+        const data = new Uint8Array(event.data.buffer);
+        processHidData(data);
+      });
+      
+      console.log('✅ WEBHID CONECTADO COM SUCESSO!');
+      setError(null);
+      
+    } catch (err: any) {
+      console.error('❌ Erro ao conectar WebHID:', err);
+      setError(`Erro WebHID: ${err.message}`);
+    }
+  }, [navigator.hid]);
+
+  // Processar dados HID recebidos
+  const processHidData = useCallback((data: Uint8Array) => {
+    console.log('🔍 PROCESSANDO DADOS HID:', Array.from(data).map(b => b.toString(16).padStart(2, '0')).join(' '));
+    
+    if (!props?.onCommand) return;
+    
+    // Mapear códigos HID comuns para comandos
+    // Baseado em códigos de teclado HID padrão
+    const firstByte = data[0];
+    const secondByte = data.length > 1 ? data[1] : 0;
+    const keyCode = data.length > 2 ? data[2] : 0;
+    
+    let command = '';
+    
+    // Códigos de teclas comuns
+    switch (keyCode) {
+      case 0x2C: // Espaço
+        command = 'toggle_play';
+        break;
+      case 0x29: // ESC
+        command = 'reset';
+        break;
+      case 0x52: // Seta para cima
+        command = 'page_up';
+        break;
+      case 0x51: // Seta para baixo
+        command = 'page_down';
+        break;
+      case 0x4F: // Seta para direita
+        command = 'speed_up';
+        break;
+      case 0x50: // Seta para esquerda
+        command = 'speed_down';
+        break;
+    }
+    
+    // Códigos de Consumer Control (botões de mídia)
+    if (firstByte === 0x01) { // Consumer Control Report
+      switch (secondByte) {
+        case 0xCD: // Play/Pause
+          command = 'toggle_play';
+          break;
+        case 0xB5: // Scan Next Track
+          command = 'page_down';
+          break;
+        case 0xB6: // Scan Previous Track
+          command = 'page_up';
+          break;
+        case 0xE9: // Volume Up
+          command = 'speed_up';
+          break;
+        case 0xEA: // Volume Down
+          command = 'speed_down';
+          break;
+      }
+    }
+    
+    if (command) {
+      console.log('🚀 COMANDO HID DETECTADO:', command);
+      props.onCommand(command);
+    } else {
+      console.log('⚠️ Código HID não mapeado:', { firstByte: firstByte.toString(16), secondByte: secondByte.toString(16), keyCode: keyCode.toString(16) });
+    }
+  }, [props]);
+
+  // Desconectar WebHID
+  const disconnectWebHid = useCallback(async () => {
+    if (webHidDevice) {
+      try {
+        await webHidDevice.close();
+        setWebHidDevice(null);
+        console.log('🚫 WEBHID DESCONECTADO');
+      } catch (err) {
+        console.error('Erro ao desconectar WebHID:', err);
+      }
+    }
+  }, [webHidDevice]);
+
+  // Verificar suporte ao Web Bluetooth e WebHID
+  const isSupported = typeof navigator !== 'undefined' && 'bluetooth' in navigator;
+  const isWebHidSupported = typeof navigator !== 'undefined' && 'hid' in navigator;
+
   return {
     device,
     isConnecting,
     error,
     connect,
     disconnect,
-    isSupported: !!navigator.bluetooth
+    isSupported,
+    // WebHID
+    webHidDevice,
+    connectWebHid,
+    disconnectWebHid,
+    isWebHidSupported
   };
 }
