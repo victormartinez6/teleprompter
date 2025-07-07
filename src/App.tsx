@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { TeleprompterDisplay } from './components/TeleprompterDisplay';
 import { ControlPanel } from './components/ControlPanel';
 import { CountdownTimer } from './components/CountdownTimer';
@@ -122,7 +122,7 @@ function App() {
 
     const timer = setTimeout(() => {
       setShowLandscapeControls(false);
-    }, 5000); // Aumentado para 5 segundos
+    }, 8000); // Aumentado para 8 segundos
 
     return () => clearTimeout(timer);
   }, [showLandscapeControls, isLandscape]);
@@ -133,7 +133,7 @@ function App() {
 
     const timer = setTimeout(() => {
       setShowLandscapePlayButtons(false);
-    }, 6000); // Aumentado para 6 segundos
+    }, 10000); // Aumentado para 10 segundos
 
     return () => clearTimeout(timer);
   }, [showLandscapePlayButtons, isLandscape]);
@@ -189,40 +189,75 @@ function App() {
     let touchStartY = 0;
     let touchStartTime = 0;
     let touchStartX = 0;
+    let touchMoved = false;
 
     const handleTouchStart = (e: TouchEvent) => {
+      // Don't interfere with button clicks
+      const target = e.target as HTMLElement;
+      if (target.closest('button') || target.closest('.landscape-control-button')) {
+        return;
+      }
+      
       touchStartY = e.touches[0].clientY;
       touchStartX = e.touches[0].clientX;
       touchStartTime = Date.now();
+      touchMoved = false;
     };
 
-    const handleTouchEnd = (e: TouchEvent) => {
-      const touchEndY = e.changedTouches[0].clientY;
-      const touchEndX = e.changedTouches[0].clientX;
-      const touchEndTime = Date.now();
-      const touchDuration = touchEndTime - touchStartTime;
-      const touchDistanceY = Math.abs(touchEndY - touchStartY);
-      const touchDistanceX = Math.abs(touchEndX - touchStartX);
+    const handleTouchMove = (e: TouchEvent) => {
+      if (touchStartTime === 0) return;
+      
+      const touchCurrentY = e.touches[0].clientY;
+      const touchCurrentX = e.touches[0].clientX;
+      const touchDistanceY = Math.abs(touchCurrentY - touchStartY);
+      const touchDistanceX = Math.abs(touchCurrentX - touchStartX);
       const totalDistance = Math.sqrt(touchDistanceX * touchDistanceX + touchDistanceY * touchDistanceY);
-
-      // Only show controls if it's a tap (short duration, small distance)
-      if (touchDuration < 400 && totalDistance < 20) {
-        e.preventDefault();
-        setShowLandscapePlayButtons(true);
+      
+      // Mark as moved if distance is significant
+      if (totalDistance > 30) {
+        touchMoved = true;
       }
     };
 
+    const handleTouchEnd = (e: TouchEvent) => {
+      // Don't interfere with button clicks
+      const target = e.target as HTMLElement;
+      if (target.closest('button') || target.closest('.landscape-control-button')) {
+        return;
+      }
+      
+      const touchEndTime = Date.now();
+      const touchDuration = touchEndTime - touchStartTime;
+      
+      // Show controls if it's a tap (not a scroll/swipe)
+      if (!touchMoved && touchDuration < 600 && touchStartTime > 0) {
+        setShowLandscapePlayButtons(true);
+      }
+      
+      // Reset touch tracking
+      touchStartTime = 0;
+      touchMoved = false;
+    };
+
     const handleClick = (e: MouseEvent) => {
+      // Don't interfere with button clicks
+      const target = e.target as HTMLElement;
+      if (target.closest('button') || target.closest('.landscape-control-button')) {
+        return;
+      }
+      
       // For mouse clicks (desktop), show controls immediately
       setShowLandscapePlayButtons(true);
     };
 
     document.addEventListener('touchstart', handleTouchStart, { passive: true });
-    document.addEventListener('touchend', handleTouchEnd, { passive: false });
+    document.addEventListener('touchmove', handleTouchMove, { passive: true });
+    document.addEventListener('touchend', handleTouchEnd, { passive: true });
     document.addEventListener('click', handleClick);
 
     return () => {
       document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
       document.removeEventListener('click', handleClick);
     };
@@ -337,10 +372,11 @@ function App() {
 
         {/* Landscape Play Buttons - Bottom Center */}
         {showLandscapePlayButtons && (
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30 flex items-center gap-4 fade-in-up">
+          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-50 flex items-center gap-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-300">
             <button
               onClick={handleTogglePlay}
-              className="flex items-center justify-center w-16 h-16 bg-[#F1613D] text-white rounded-full hover:bg-[#e55532] transition-all duration-300 shadow-2xl hover:scale-110 active:scale-95 landscape-control-button"
+              className="landscape-control-button flex items-center justify-center w-16 h-16 bg-[#F1613D] text-white rounded-full hover:bg-[#e55532] transition-all duration-200 shadow-2xl hover:shadow-3xl active:shadow-lg transform hover:scale-105 active:scale-95 touch-manipulation select-none"
+              style={{ touchAction: 'manipulation' }}
             >
               {isPlaying ? (
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -355,7 +391,8 @@ function App() {
             
             <button
               onClick={handleReset}
-              className="flex items-center justify-center w-12 h-12 bg-gray-600 text-white rounded-full hover:bg-gray-700 transition-all duration-300 shadow-xl hover:scale-110 active:scale-95 landscape-control-button"
+              className="landscape-control-button flex items-center justify-center w-12 h-12 bg-gray-600 text-white rounded-full hover:bg-gray-700 transition-all duration-200 shadow-xl hover:shadow-2xl active:shadow-md transform hover:scale-105 active:scale-95 touch-manipulation select-none"
+              style={{ touchAction: 'manipulation' }}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -367,7 +404,8 @@ function App() {
                 setShowLandscapePlayButtons(false);
                 setShowLandscapeControls(true);
               }}
-              className="flex items-center justify-center w-10 h-10 bg-gray-500 text-white rounded-full hover:bg-gray-600 transition-all duration-300 shadow-lg hover:scale-110 active:scale-95 landscape-control-button"
+              className="landscape-control-button flex items-center justify-center w-10 h-10 bg-gray-500 text-white rounded-full hover:bg-gray-600 transition-all duration-200 shadow-lg hover:shadow-xl active:shadow-sm transform hover:scale-105 active:scale-95 touch-manipulation select-none"
+              style={{ touchAction: 'manipulation' }}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
