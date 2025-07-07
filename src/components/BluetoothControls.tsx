@@ -1,4 +1,3 @@
-import React from 'react';
 import { Bluetooth, BluetoothConnected } from 'lucide-react';
 import { useBluetooth } from '../hooks/useBluetooth';
 
@@ -7,7 +6,7 @@ interface BluetoothControlsProps {
 }
 
 export function BluetoothControls({ onCommand }: BluetoothControlsProps) {
-  const { device, isConnecting, error, connect, disconnect, isSupported } = useBluetooth();
+  const { device, isConnecting, error, connect, disconnect, isSupported } = useBluetooth({ onCommand });
 
   if (!isSupported) {
     return (

@@ -337,12 +337,17 @@ function App() {
 
 
   const handleBluetoothCommand = useCallback((command: string) => {
+    console.log('Bluetooth Command:', command);
+    
     switch (command) {
       case 'play':
         if (!isPlaying) handleTogglePlay();
         break;
       case 'pause':
         if (isPlaying) setIsPlaying(false);
+        break;
+      case 'toggle_play':
+        handleTogglePlay();
         break;
       case 'reset':
         handleReset();
@@ -353,8 +358,16 @@ function App() {
       case 'speed_down':
         setSettings(prev => ({ ...prev, speed: Math.max(0.1, prev.speed - 0.1) }));
         break;
+      case 'page_up':
+        // Rolar para cima (diminuir scroll)
+        setScrollPosition(prev => Math.max(0, prev - 100));
+        break;
+      case 'page_down':
+        // Rolar para baixo (aumentar scroll)
+        setScrollPosition(prev => prev + 100);
+        break;
     }
-  }, [isPlaying, handleTogglePlay, handleReset, setSettings]);
+  }, [isPlaying, handleTogglePlay, handleReset, setSettings, setScrollPosition]);
 
   const handleTextChange = useCallback((newText: string) => {
     setSettings({ ...settings, text: newText });
