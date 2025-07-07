@@ -153,53 +153,43 @@ export function useBluetooth(props?: BluetoothHookProps) {
     }
   }, [device?.connected, props]);
 
-  // Debug: capturar TODOS os eventos possíveis
+  // Listener de teclado sempre ativo para teste
   useEffect(() => {
-    if (device?.connected && props?.onCommand) {
-      console.log('Bluetooth Remote: Ativando captura COMPLETA de eventos');
+    if (props?.onCommand) {
+      console.log('🎮 BLUETOOTH DEBUG: Sistema ativo!');
+      console.log('📋 TESTE MANUAL: Use as seguintes teclas do seu teclado:');
+      console.log('   - ESPAÇO: Play/Pause');
+      console.log('   - ESC: Reset');
+      console.log('   - SETA CIMA: Page Up');
+      console.log('   - SETA BAIXO: Page Down');
+      console.log('   - SETA DIREITA: Speed +');
+      console.log('   - SETA ESQUERDA: Speed -');
+      console.log('   - Números 1-6: Comandos alternativos');
       
-      // Função para capturar qualquer evento
-      const captureAllEvents = (event: Event) => {
-        console.log('Bluetooth: Evento capturado:', {
-          type: event.type,
-          target: event.target,
-          detail: (event as any).detail,
-          data: (event as any).data
-        });
-        
-        // Se for um evento de teclado, processar
-        if (event instanceof KeyboardEvent) {
-          handleKeyPress(event);
-        }
-      };
-      
-      // Lista de todos os eventos possíveis para capturar
-      const eventTypes = [
-        'keydown', 'keyup', 'keypress',
-        'input', 'change',
-        'click', 'mousedown', 'mouseup',
-        'touchstart', 'touchend',
-        'focus', 'blur',
-        'devicemotion', 'deviceorientation'
-      ];
-      
-      // Adicionar listeners para todos os eventos
-      eventTypes.forEach(eventType => {
-        document.addEventListener(eventType, captureAllEvents, true);
-      });
-      
-      // Listener específico para teclado
       document.addEventListener('keydown', handleKeyPress, true);
       
       return () => {
-        console.log('Bluetooth Remote: Desativando captura de eventos');
-        eventTypes.forEach(eventType => {
-          document.removeEventListener(eventType, captureAllEvents, true);
-        });
+        console.log('🎮 BLUETOOTH DEBUG: Sistema desativado');
         document.removeEventListener('keydown', handleKeyPress, true);
       };
     }
-  }, [device?.connected, handleKeyPress, props?.onCommand]);
+  }, [handleKeyPress, props?.onCommand]);
+
+  // Debug específico para dispositivo conectado
+  useEffect(() => {
+    if (device?.connected) {
+      console.log('🔗 BLUETOOTH: Dispositivo conectado -', device.name);
+      console.log('🧪 TESTE: Pressione os botões do controle remoto agora...');
+      
+      // Timer para verificar se recebemos algum evento
+      const testTimer = setTimeout(() => {
+        console.log('⚠️  BLUETOOTH: Nenhum evento detectado do controle remoto.');
+        console.log('💡 SUGESTÃO: Teste com as teclas do teclado primeiro.');
+      }, 5000);
+      
+      return () => clearTimeout(testTimer);
+    }
+  }, [device?.connected]);
 
   const connect = useCallback(async () => {
     if (!navigator.bluetooth) {
