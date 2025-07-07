@@ -406,6 +406,25 @@ export function useBluetooth(props?: BluetoothHookProps) {
         processHidData(data);
       });
       
+      // Debug adicional: verificar informações do dispositivo
+      console.log('🔍 INFORMAÇÕES DO DISPOSITIVO:');
+      console.log('  - Nome:', selectedDevice.productName);
+      console.log('  - Vendor ID:', selectedDevice.vendorId);
+      console.log('  - Product ID:', selectedDevice.productId);
+      console.log('  - Collections:', selectedDevice.collections);
+      
+      // Testar se o dispositivo está enviando dados
+      console.log('🚨 TESTE: Pressione QUALQUER botão do controle agora!');
+      console.log('🚨 Se não aparecer "EVENTO HID RECEBIDO", o controle não está enviando dados HID.');
+      
+      // Fallback: Se o controle não enviar dados HID diretamente,
+      // ele pode estar funcionando como teclado virtual do sistema
+      setTimeout(() => {
+        console.log('⏰ TIMEOUT: Verificando se recebemos eventos HID...');
+        console.log('💡 DICA: Se não funcionou, o controle pode estar enviando teclas do sistema.');
+        console.log('💡 Teste: Pressione os botões e veja se aparecem como teclas no teclado global.');
+      }, 3000);
+      
       console.log('✅ WEBHID CONECTADO COM SUCESSO!');
       setError(null);
       
@@ -418,8 +437,13 @@ export function useBluetooth(props?: BluetoothHookProps) {
   // Processar dados HID recebidos
   const processHidData = useCallback((data: Uint8Array) => {
     console.log('🔍 PROCESSANDO DADOS HID:', Array.from(data).map(b => b.toString(16).padStart(2, '0')).join(' '));
+    console.log('🔍 DADOS RAW:', Array.from(data));
+    console.log('🔍 TAMANHO:', data.length, 'bytes');
     
-    if (!props?.onCommand) return;
+    if (!props?.onCommand) {
+      console.log('❌ Callback de comando não disponível');
+      return;
+    }
     
     // Mapear códigos HID comuns para comandos
     // Baseado em códigos de teclado HID padrão
@@ -477,6 +501,24 @@ export function useBluetooth(props?: BluetoothHookProps) {
       props.onCommand(command);
     } else {
       console.log('⚠️ Código HID não mapeado:', { firstByte: firstByte.toString(16), secondByte: secondByte.toString(16), keyCode: keyCode.toString(16) });
+      console.log('💡 SUGESTÃO: Adicione este mapeamento se for um botão válido do seu controle.');
+      
+      // Tentar mapear códigos específicos do controle 2.4G Receiver
+      if (data.length > 0) {
+        console.log('🔧 TENTANDO MAPEAMENTO ESPECÍFICO PARA 2.4G RECEIVER...');
+        
+        // Mapear baseado nos dados brutos recebidos
+        const dataStr = Array.from(data).join(',');
+        let specificCommand = '';
+        
+        // Você pode adicionar mapeamentos específicos aqui baseado nos logs
+        // Por exemplo: if (dataStr === '1,0,0') specificCommand = 'toggle_play';
+        
+        if (specificCommand) {
+          console.log('🎯 COMANDO ESPECÍFICO DETECTADO:', specificCommand);
+          props.onCommand(specificCommand);
+        }
+      }
     }
   }, [props]);
 
