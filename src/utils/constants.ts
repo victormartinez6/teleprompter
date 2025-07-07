@@ -41,5 +41,6 @@ export const DEFAULT_SETTINGS = {
   mirror: false,
   displayMode: DISPLAY_MODES.FIT,
   showReadingIndicator: true,
+  showReadingGuide: true,
   text: 'Bem-vindo ao Teleprompter Fácil!\n\nEste é seu aplicativo de teleprompter profissional com recursos avançados incluindo:\n\n• Múltiplos modos de rolagem\n• Controle remoto Bluetooth\n• Aparência personalizável\n• Recursos PWA\n• Funcionalidade offline\n\nComece digitando ou cole seu script aqui para começar. Use os controles para personalizar sua experiência e conecte um dispositivo Bluetooth para controle remoto.'
 };

@@ -23,6 +23,7 @@ interface Settings {
   mirror: boolean;
   displayMode: string;
   showReadingIndicator: boolean;
+  showReadingGuide: boolean;
   text: string;
 }
 
@@ -59,10 +60,43 @@ function App() {
   }, [isPlaying, settings.countdownTime]);
 
   const handleReset = useCallback(() => {
+    console.log('handleReset chamado - parando reprodução e resetando');
+    console.log('Estado atual - scrollPosition:', scrollPosition, 'isPlaying:', isPlaying, 'mirror:', settings.mirror);
+    
+    // Parar a reprodução primeiro
     setIsPlaying(false);
-    setScrollPosition(0);
     setShowCountdown(false);
-  }, []);
+    
+    // Forçar uma atualização adicional para garantir que o DOM seja atualizado
+    setTimeout(() => {
+      const teleprompterDisplay = document.querySelector('.teleprompter-display');
+      if (teleprompterDisplay) {
+        const maxScroll = teleprompterDisplay.scrollHeight - teleprompterDisplay.clientHeight;
+        
+        console.log('handleReset: scrollHeight total:', teleprompterDisplay.scrollHeight);
+        console.log('handleReset: clientHeight:', teleprompterDisplay.clientHeight);
+        console.log('handleReset: maxScroll calculado:', maxScroll);
+        console.log('handleReset: modo espelho ativo:', settings.mirror);
+        
+        if (settings.mirror) {
+          // Modo espelho: texto desce de cima para baixo
+          // Reset deve ir para o topo (posição 0) para o texto descer
+          console.log('handleReset: modo espelho - resetando para o topo (0)');
+          setScrollPosition(0);
+          teleprompterDisplay.scrollTop = 0;
+        } else {
+          // Modo normal: texto sobe de baixo para cima
+          // Reset deve ir para o final (maxScroll) para o texto subir
+          console.log('handleReset: modo normal - resetando para o final (' + maxScroll + ')');
+          setScrollPosition(maxScroll);
+          teleprompterDisplay.scrollTop = maxScroll;
+        }
+        
+        console.log('handleReset: scrollTop final:', teleprompterDisplay.scrollTop);
+        console.log('handleReset: reset aplicado com sucesso');
+      }
+    }, 100);
+  }, [scrollPosition, isPlaying, settings.mirror]);
 
   const handleToggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
@@ -374,9 +408,20 @@ function App() {
         {showLandscapePlayButtons && (
           <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-50 flex items-center gap-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-300">
             <button
-              onClick={handleTogglePlay}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Botão play/pause clicado em modo paisagem');
+                handleTogglePlay();
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Botão play/pause tocado em modo paisagem');
+                handleTogglePlay();
+              }}
               className="landscape-control-button flex items-center justify-center w-16 h-16 bg-[#F1613D] text-white rounded-full hover:bg-[#e55532] transition-all duration-200 shadow-2xl hover:shadow-3xl active:shadow-lg transform hover:scale-105 active:scale-95 touch-manipulation select-none"
-              style={{ touchAction: 'manipulation' }}
+              style={{ touchAction: 'manipulation', userSelect: 'none', WebkitUserSelect: 'none' }}
             >
               {isPlaying ? (
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -390,9 +435,20 @@ function App() {
             </button>
             
             <button
-              onClick={handleReset}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Botão reset clicado em modo paisagem');
+                handleReset();
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Botão reset tocado em modo paisagem');
+                handleReset();
+              }}
               className="landscape-control-button flex items-center justify-center w-12 h-12 bg-gray-600 text-white rounded-full hover:bg-gray-700 transition-all duration-200 shadow-xl hover:shadow-2xl active:shadow-md transform hover:scale-105 active:scale-95 touch-manipulation select-none"
-              style={{ touchAction: 'manipulation' }}
+              style={{ touchAction: 'manipulation', userSelect: 'none', WebkitUserSelect: 'none' }}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -400,12 +456,22 @@ function App() {
             </button>
 
             <button
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Botão configurações clicado em modo paisagem');
+                setShowLandscapePlayButtons(false);
+                setShowLandscapeControls(true);
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Botão configurações tocado em modo paisagem');
                 setShowLandscapePlayButtons(false);
                 setShowLandscapeControls(true);
               }}
               className="landscape-control-button flex items-center justify-center w-10 h-10 bg-gray-500 text-white rounded-full hover:bg-gray-600 transition-all duration-200 shadow-lg hover:shadow-xl active:shadow-sm transform hover:scale-105 active:scale-95 touch-manipulation select-none"
-              style={{ touchAction: 'manipulation' }}
+              style={{ touchAction: 'manipulation', userSelect: 'none', WebkitUserSelect: 'none' }}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />

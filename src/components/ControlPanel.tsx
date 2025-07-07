@@ -12,6 +12,7 @@ interface Settings {
   mirror: boolean;
   displayMode: string;
   showReadingIndicator: boolean;
+  showReadingGuide: boolean;
   text: string;
 }
 
@@ -230,6 +231,16 @@ export function ControlPanel({
                   className="w-4 h-4 rounded accent-[#F1613D]"
                 />
                 <span className="text-sm text-gray-700 font-medium">Indicador de Leitura</span>
+              </label>
+
+              <label className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={settings.showReadingGuide}
+                  onChange={(e) => onUpdateSettings({ ...settings, showReadingGuide: e.target.checked })}
+                  className="w-4 h-4 rounded accent-[#F1613D]"
+                />
+                <span className="text-sm text-gray-700 font-medium">Linha Guia Central</span>
               </label>
             </div>
           </div>

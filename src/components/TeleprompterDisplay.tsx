@@ -9,6 +9,7 @@ interface Settings {
   backgroundColor: string;
   mirror: boolean;
   showReadingIndicator: boolean;
+  showReadingGuide: boolean;
   speed: number;
 }
 
@@ -51,20 +52,31 @@ const TeleprompterDisplay = memo(function TeleprompterDisplay({
 
   // Handle scroll position updates
   useEffect(() => {
-    if (!displayRef.current || !isPlaying) return;
+    if (!displayRef.current) return;
 
     const element = displayRef.current;
+    
+    console.log('TeleprompterDisplay: aplicando scroll');
+    console.log('  - scrollPosition recebido:', scrollPosition);
+    console.log('  - maxScrollHeight:', maxScrollHeight);
+    console.log('  - settings.mirror:', settings.mirror);
+    console.log('  - scrollTop antes:', element.scrollTop);
     
     if (settings.mirror) {
       // No modo espelho, começar do final e rolar para cima
       // Inverter a posição do scroll
       const invertedPosition = maxScrollHeight - scrollPosition;
       element.scrollTop = Math.max(0, invertedPosition);
+      console.log('  - modo espelho: invertedPosition:', invertedPosition);
     } else {
       // Modo normal - rolar de cima para baixo
       element.scrollTop = Math.min(scrollPosition, maxScrollHeight);
+      console.log('  - modo normal: definindo scrollTop para:', Math.min(scrollPosition, maxScrollHeight));
     }
-  }, [scrollPosition, isPlaying, settings.mirror, maxScrollHeight]);
+    
+    console.log('  - scrollTop depois:', element.scrollTop);
+    console.log('TeleprompterDisplay: scroll aplicado com sucesso');
+  }, [scrollPosition, settings.mirror, maxScrollHeight]);
 
   // Handle manual scroll when not playing
   useEffect(() => {
@@ -150,6 +162,15 @@ const TeleprompterDisplay = memo(function TeleprompterDisplay({
       {/* Reading Indicator */}
       {settings.showReadingIndicator && !isEditing && (
         <div className="absolute left-1/2 transform -translate-x-1/2 bottom-8 w-2 h-2 bg-red-500 rounded-full animate-pulse z-20" />
+      )}
+
+      {/* Reading Guide Line */}
+      {settings.showReadingGuide && !isEditing && (
+        <div className="absolute left-0 right-0 top-1/2 transform -translate-y-1/2 z-10">
+          <div className="w-full h-0.5 bg-red-500/60 shadow-lg">
+            <div className="w-full h-full bg-gradient-to-r from-transparent via-red-500 to-transparent animate-pulse" />
+          </div>
+        </div>
       )}
 
       {/* Text Statistics */}
