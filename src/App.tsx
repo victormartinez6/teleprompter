@@ -334,10 +334,37 @@ function App() {
     };
   }, []);
 
-
-
   const handleBluetoothCommand = useCallback((command: string) => {
-    console.log('Bluetooth Command:', command);
+    console.log('🚀 COMANDO BLUETOOTH RECEBIDO:', command);
+    
+    // Expor função de teste global
+    if (typeof window !== 'undefined') {
+      (window as any).testTeleprompterCommands = () => {
+        console.log('🧪 TESTE MANUAL: Iniciando sequência de comandos...');
+        
+        console.log('🎮 Testando TOGGLE_PLAY...');
+        handleBluetoothCommand('toggle_play');
+        
+        setTimeout(() => {
+          console.log('🎮 Testando RESET...');
+          handleBluetoothCommand('reset');
+        }, 2000);
+        
+        setTimeout(() => {
+          console.log('🎮 Testando SPEED_UP...');
+          handleBluetoothCommand('speed_up');
+        }, 4000);
+        
+        setTimeout(() => {
+          console.log('🎮 Testando PAGE_DOWN...');
+          handleBluetoothCommand('page_down');
+        }, 6000);
+        
+        console.log('✅ Teste iniciado! Observe o teleprompter por 8 segundos.');
+      };
+      
+      console.log('🧪 FUNÇÃO DE TESTE CRIADA: window.testTeleprompterCommands()');
+    }
     
     switch (command) {
       case 'play':
