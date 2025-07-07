@@ -309,10 +309,25 @@ function App() {
 
   // Update settings text when script is selected
   useEffect(() => {
+    console.log('🔄 USEEFFECT SETTINGS: Executando...');
+    console.log('🔄 USEEFFECT SETTINGS: currentScript existe?', !!currentScript);
+    console.log('🔄 USEEFFECT SETTINGS: currentScript:', currentScript?.title);
+    
     if (currentScript) {
-      setSettings(prev => ({ ...prev, text: currentScript.content }));
+      console.log('🔄 USEEFFECT SETTINGS: Atualizando settings.text com:', currentScript.content?.substring(0, 50) + '...');
+      
+      setSettings(prev => {
+        console.log('🔄 USEEFFECT SETTINGS: Settings ANTES da atualização:', prev?.text?.substring(0, 50) + '...');
+        const newSettings = { ...prev, text: currentScript.content };
+        console.log('🔄 USEEFFECT SETTINGS: Settings DEPOIS da atualização:', newSettings?.text?.substring(0, 50) + '...');
+        return newSettings;
+      });
+      
+      console.log('🔄 USEEFFECT SETTINGS: setSettings chamado com sucesso!');
+    } else {
+      console.log('🔄 USEEFFECT SETTINGS: currentScript é null/undefined, não atualizando');
     }
-  }, [currentScript, setSettings]);
+  }, [currentScript]); // Removido setSettings das dependências para evitar loop infinito
 
   // Prevent zoom on double tap for mobile - but allow scrolling
   useEffect(() => {
@@ -406,10 +421,41 @@ function App() {
   }, [setSettings]);
 
   const handleScriptSelect = useCallback((script: any) => {
-    setSettings(prev => ({ ...prev, text: script.content }));
-    selectScript(script.id);
+    console.log('🚀 INICIANDO handleScriptSelect');
+    console.log('📝 SCRIPT RECEBIDO:', script);
+    console.log('📄 TÍTULO:', script?.title);
+    console.log('📄 CONTEÚDO:', script?.content?.substring(0, 100) + '...');
+    console.log('📄 TAMANHO DO CONTEÚDO:', script?.content?.length);
+    
+    // Verificar se o script tem conteúdo
+    if (!script || !script.content) {
+      console.error('❌ ERRO: Script sem conteúdo!', script);
+      return;
+    }
+    
+    console.log('🔄 ATUALIZANDO SETTINGS...');
+    // Atualizar o texto do teleprompter com o conteúdo do script
+    setSettings(prev => {
+      console.log('📊 SETTINGS ANTES:', prev.text?.substring(0, 50) + '...');
+      const newSettings = { ...prev, text: script.content };
+      console.log('📊 SETTINGS DEPOIS:', newSettings.text?.substring(0, 50) + '...');
+      return newSettings;
+    });
+    
+    console.log('🎯 SELECIONANDO SCRIPT NO HOOK...');
+    // Selecionar o script no hook (passando o objeto completo, não apenas o ID)
+    selectScript(script);
+    
+    console.log('🔄 RESETANDO SCROLL...');
+    // Reset da posição de scroll
+    setScrollPosition(0);
+    
+    console.log('❌ FECHANDO GERENCIADOR...');
+    // Fechar o gerenciador de scripts
     setShowScriptManager(false);
-  }, [selectScript, setSettings]);
+    
+    console.log('✅ PROCESSO COMPLETO! TEXTO DEVE APARECER AGORA!');
+  }, [selectScript, setSettings, setScrollPosition]);
 
   // Landscape mode - reading focused layout
   if (isLandscape) {

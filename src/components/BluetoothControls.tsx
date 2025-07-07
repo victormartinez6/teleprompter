@@ -5,31 +5,19 @@ interface BluetoothControlsProps {
   onCommand: (command: string) => void;
 }
 
-export function BluetoothControls({ onCommand }: BluetoothControlsProps) {
-  console.log('🔵 BluetoothControls: Componente renderizado');
-  console.log('🔵 BluetoothControls: onCommand recebido:', typeof onCommand, !!onCommand);
-  
-  const { 
-    device, 
-    isConnecting, 
-    error, 
-    connect, 
-    disconnect, 
+export const BluetoothControls: React.FC<BluetoothControlsProps> = ({ onCommand }) => {
+  const {
+    device,
+    isConnecting,
+    error,
+    connect,
+    disconnect,
     isSupported,
     webHidDevice,
     connectWebHid,
     disconnectWebHid,
     isWebHidSupported
   } = useBluetooth({ onCommand });
-  
-  console.log('🔵 BluetoothControls: Hook retornou:', { 
-    device: !!device, 
-    isConnecting, 
-    error, 
-    isSupported,
-    webHidDevice: !!webHidDevice,
-    isWebHidSupported
-  });
 
   if (!isSupported && !isWebHidSupported) {
     return (

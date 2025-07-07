@@ -32,6 +32,12 @@ const TeleprompterDisplay = memo(function TeleprompterDisplay({
   onScrollPositionChange,
   isLandscapeMode = false
 }: TeleprompterDisplayProps) {
+  
+  // DEBUG: Log do texto recebido
+  console.log('📺 TELEPROMPTER DISPLAY: Renderizando com texto:', text?.substring(0, 50) + '...');
+  console.log('📺 TELEPROMPTER DISPLAY: Tamanho do texto:', text?.length || 0);
+  console.log('📺 TELEPROMPTER DISPLAY: Texto existe?', !!text);
+  console.log('📺 TELEPROMPTER DISPLAY: Settings:', settings);
   const [isEditing, setIsEditing] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [enableMarkdown, setEnableMarkdown] = useState(false);

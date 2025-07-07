@@ -171,22 +171,12 @@ export function useBluetooth(props?: BluetoothHookProps) {
       const existingListener = (window as any).__teleprompterKeyListener;
       
       if (existingListener) {
-        console.log('✅ SISTEMA JÁ ATIVO - Callback atualizado');
         return () => {
           // NÃO LIMPAR - manter sistema ativo
-          console.log('🔄 Re-render detectado - mantendo sistema ativo');
         };
       }
       
       console.log('🎮 SISTEMA DE CONTROLE ATIVO (GLOBAL - PERSISTENTE)!');
-      console.log('📋 TESTE COM TECLADO:');
-      console.log('   🎮 ESPAÇO: Play/Pause');
-      console.log('   🔄 ESC: Reset');
-      console.log('   ⬆️  SETA CIMA: Page Up');
-      console.log('   ⬇️  SETA BAIXO: Page Down');
-      console.log('   ➡️  SETA DIREITA: Speed +');
-      console.log('   ⬅️  SETA ESQUERDA: Speed -');
-      console.log('   🔢 Números 1-6: Comandos alternativos');
       console.log('\n🚨 TESTE: Pressione ESPAÇO agora!');
       
       // Listener global único

@@ -62,8 +62,17 @@ export function ScriptManager({
   };
 
   const handleSelectAndClose = (script: Script) => {
+    console.log('🎯 SCRIPTMANAGER: handleSelectAndClose chamado');
+    console.log('📝 SCRIPTMANAGER: Script selecionado:', script.title);
+    console.log('📄 SCRIPTMANAGER: Conteúdo:', script.content?.substring(0, 50) + '...');
+    console.log('🔄 SCRIPTMANAGER: Chamando onScriptSelect...');
+    
     onScriptSelect(script);
+    
+    console.log('❌ SCRIPTMANAGER: Fechando modal...');
     onClose();
+    
+    console.log('✅ SCRIPTMANAGER: Processo completo!');
   };
 
   const startEditing = (script: Script) => {
